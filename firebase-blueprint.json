@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Holds authenticated profile metadata of citizens and government officers",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "aadhaarId": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "stateOfResidence": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": ["email", "fullName", "role", "stateOfResidence"]
+    },
+    "HistoryItem": {
+      "title": "HistoryItem",
+      "description": "Holds document simplification audits linked securely to active user IDs",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "detectedType": {
+          "type": "string"
+        },
+        "isGovernmentRelated": {
+          "type": "boolean"
+        },
+        "result": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": ["userId", "timestamp", "fileName", "detectedType", "isGovernmentRelated", "result"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Citizen and officer profiles"
+    },
+    "history/{historyId}": {
+      "schema": "HistoryItem",
+      "description": "Audit trails of document NLP transcripts"
+    }
+  }
+}

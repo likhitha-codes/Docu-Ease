@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net default-deny gate
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprint for Users entity
+    function isValidUser(data) {
+      return data.keys().hasAll(['email', 'fullName', 'role', 'stateOfResidence'])
+        && data.keys().size() >= 4
+        && data.email is string && data.email.size() <= 128
+        && data.fullName is string && data.fullName.size() <= 128
+        && data.role is string && data.role.size() <= 64
+        && data.stateOfResidence is string && data.stateOfResidence.size() <= 120;
+    }
+
+    // Users Collection rules (PII isolated to resource owners)
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'stateOfResidence', 'aadhaarId'])
+      );
+      allow delete: if false; // Profiles are immortal
+    }
+
+    // Validation Blueprint for Translation History entity
+    function isValidHistoryItem(data) {
+      return data.keys().hasAll(['userId', 'timestamp', 'fileName', 'detectedType', 'isGovernmentRelated', 'result'])
+        && data.userId == request.auth.uid
+        && data.timestamp is string && data.timestamp.size() <= 128
+        && data.fileName is string && data.fileName.size() <= 256
+        && data.detectedType is string && data.detectedType.size() <= 128
+        && data.isGovernmentRelated is bool;
+    }
+
+    // History logs Collection rules
+    match /history/{historyId} {
+      allow get: if isSignedIn() && isValidId(historyId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(historyId) && isValidHistoryItem(incoming());
+      allow update: if false; // Translation records are audit logs; immutable state
+      allow delete: if isSignedIn() && isValidId(historyId) && existing().userId == request.auth.uid;
+    }
+  }
+}

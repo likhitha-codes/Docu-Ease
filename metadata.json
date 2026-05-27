@@ -1,0 +1,6 @@
+{
+  "name": "DocuEase",
+  "description": "An NLP-powered Indian government document simplification and translation platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
