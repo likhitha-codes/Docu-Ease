@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { motion } from "motion/react";
 
 interface AadhaarSSOLoginProps {
   onLoginSuccess: (user: CitizenUser) => void;
@@ -230,245 +231,358 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
   };
 
   return (
-    <div className="w-full max-w-md mx-auto my-12 bg-white border-t-4 border-t-[#FF6600] border-x border-b border-slate-300 rounded shadow-md">
-      {/* MeriPehchaan Brand header banner */}
-      <div className={`p-4 ${highContrast ? "bg-black" : "bg-slate-50"} border-b border-slate-200 text-center rounded-t`}>
-        <div className="flex justify-center items-center gap-1.5 mb-1 text-[10px] tracking-wide font-extrabold uppercase text-[#003366]">
-          <span className="text-[#FF9933]">•</span>
-          <span className="text-[#003366]">MeriPehchaan</span>
-          <span className="text-emerald-600">•</span>
-          <span className="text-slate-500 font-normal">National Single Sign-On Platform</span>
-        </div>
-        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-tight">
-          Secure Citizen Portal Gateway
-        </h2>
+    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <motion.div
+          className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full blur-3xl opacity-20"
+          animate={{ y: [0, 30, 0], x: [0, 20, 0] }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-200 rounded-full blur-3xl opacity-20"
+          animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
+          transition={{ duration: 10, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute -bottom-32 right-1/3 w-80 h-80 bg-pink-200 rounded-full blur-3xl opacity-20"
+          animate={{ y: [0, 20, 0], x: [0, -30, 0] }}
+          transition={{ duration: 9, repeat: Infinity }}
+        />
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => {
-            setActiveLoginMode("signin");
-            setErrorText("");
-            setSuccessText("");
-          }}
-          className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center cursor-pointer ${
-            activeLoginMode === "signin"
-              ? "bg-white text-[#003366] border-b-2 border-[#003366]"
-              : "bg-slate-100 text-slate-500 hover:bg-slate-50"
-          }`}
-        >
-          Sign In
-        </button>
-        <button
-          onClick={() => {
-            setActiveLoginMode("signup");
-            setErrorText("");
-            setSuccessText("");
-          }}
-          className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center cursor-pointer ${
-            activeLoginMode === "signup"
-              ? "bg-white text-[#003366] border-b-2 border-[#003366]"
-              : "bg-slate-100 text-slate-500 hover:bg-slate-50"
-          }`}
-        >
-          Sign Up / Register
-        </button>
-        <button
-          onClick={() => {
-            setActiveLoginMode("quick");
-            setErrorText("");
-            setSuccessText("");
-          }}
-          className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-wider text-center cursor-pointer ${
-            activeLoginMode === "quick"
-              ? "bg-white text-[#FF6600] border-b-2 border-[#FF6600]"
-              : "bg-slate-100 text-[#FF6600]/80 hover:bg-slate-50"
-          }`}
-        >
-          ⚡ Dev Bypass
-        </button>
-      </div>
-
-      <div className="p-6">
-        {errorText && (
-          <div className="mb-4 p-3 bg-red-50 border-l-4 border-l-red-650 text-wrap text-xs text-red-700 font-bold overflow-hidden">
-            {errorText}
-          </div>
-        )}
-
-        {successText && (
-          <div className="mb-4 p-3 bg-emerald-50 border-l-4 border-l-emerald-600 text-xs text-emerald-800 font-bold">
-            {successText}
-          </div>
-        )}
-
-        {activeLoginMode === "signin" && (
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="text-[11px] text-slate-500 leading-normal bg-slate-50 p-2.5 border border-slate-200 rounded">
-              <strong>Security Protocol:</strong> Enter your registered credentials for secure token routing. Document audits and histories are bound strictly to your unique userID.
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Portal Email Address *
-              </label>
-              <input
-                type="email"
-                placeholder="e.g. candidate@gmail.com"
-                value={signinEmail}
-                onChange={(e) => setSigninEmail(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-350 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Pin Code / Password *
-              </label>
-              <input
-                type="password"
-                placeholder="Enter password"
-                value={signinPassword}
-                onChange={(e) => setSigninPassword(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-350 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 bg-[#003366] hover:bg-[#112233] text-white text-xs font-bold uppercase tracking-widest cursor-pointer shadow-sm text-center rounded transition-colors"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full max-w-md"
+      >
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+          {/* Modern gradient header */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 text-center">
+            <motion.div
+              className="absolute inset-0 opacity-30"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             >
-              {isLoading ? "AUTHENTICATING SECURE TOKEN..." : "CONFIRM PROFILE & LOG IN"}
-            </button>
-          </form>
-        )}
+              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-10" />
+              <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-10" />
+            </motion.div>
 
-        {activeLoginMode === "signup" && (
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div className="text-[11px] text-slate-500 leading-normal bg-slate-50 p-2.5 border border-slate-200 rounded">
-              <strong>Account Provisioning:</strong> Join the national digital transparency initiative. Sign up to securely back up your document audits.
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Full Name *
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Suresh Kumar Reddy"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-350 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                placeholder="e.g. suresh@gmail.com"
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-350 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                Secure Password *
-              </label>
-              <input
-                type="password"
-                placeholder="Min 6 characters"
-                value={signupPassword}
-                onChange={(e) => setSignupPassword(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-slate-350 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  State of Residence *
-                </label>
-                <select
-                  value={stateOfResidence}
-                  onChange={(e) => setStateOfResidence(e.target.value)}
-                  className="w-full px-2 py-2 text-sm bg-slate-50 border border-slate-350 focus:outline-none focus:border-[#003366] rounded cursor-pointer"
-                  disabled={isLoading}
+            <motion.div
+              className="relative z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex justify-center items-center gap-1.5 mb-3">
+                <motion.span
+                  className="text-2xl"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
                 >
-                  {statesOfIndia.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
+                  🛡️
+                </motion.span>
+                <h1 className="text-white text-2xl font-bold">MeriPehchaan</h1>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  12-Digit Aadhaar (Optional)
-                </label>
-                <input
-                  type="text"
-                  maxLength={12}
-                  placeholder="e.g. 110022003300"
-                  value={aadhaarNum}
-                  onChange={(e) => setAadhaarNum(e.target.value.replace(/\D/g, ""))}
-                  className="w-full px-3 py-2 text-sm border border-slate-355 focus:outline-none focus:border-[#003366] rounded bg-slate-50 focus:bg-white"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 bg-[#FF6600] hover:bg-[#e05300] text-white text-xs font-bold uppercase tracking-widest cursor-pointer shadow-sm text-center rounded transition-colors"
-            >
-              {isLoading ? "PROVISIONING ACCOUNT..." : "CREATE CITIZEN PROFILE"}
-            </button>
-          </form>
-        )}
-
-        {activeLoginMode === "quick" && (
-          <div className="space-y-4 text-center">
-            <div className="p-3 bg-amber-50 border border-amber-300 rounded text-xs text-amber-900 leading-normal text-start">
-              <strong>Evaluation Sandbox Bypass:</strong> Clicking the fast bypass button automatically registers or registers a mock citizen account via the configured Firebase Auth server. 
-              <br className="mb-1" />
-              This enables you to test translations and secure Firestore persistence immediately without typing credentials!
-            </div>
-
-            <button
-              type="button"
-              onClick={handleQuickBypass}
-              disabled={isLoading}
-              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-widest cursor-pointer shadow-md rounded transition-transform duration-100 active:scale-98"
-            >
-              {isLoading ? "BYPASSING WITH FIREBASE AUTH..." : "⚡ INSTANT REGISTER & BYPASS"}
-            </button>
+              <p className="text-blue-100 text-sm font-medium">National Single Sign-On Platform</p>
+              <p className="text-blue-50 text-xs mt-1 opacity-90">Secure Citizen Portal Gateway</p>
+            </motion.div>
           </div>
-        )}
-      </div>
 
-      {/* Footer message */}
-      <div className="p-3.5 bg-slate-50 border-t border-slate-150 text-[9px] text-slate-500 text-center uppercase tracking-tight rounded-b leading-relaxed">
-        Secure session connection handled via client-side Firebase Auth. Ensure Authorized Domains match inside Firebase Console.
-      </div>
+          {/* Modern Tabs with claymorphism */}
+          <div className="flex gap-2 p-4 bg-gradient-to-b from-gray-50 to-white">
+            {(['signin', 'signup', 'quick'] as const).map((mode, idx) => (
+              <motion.button
+                key={mode}
+                onClick={() => {
+                  setActiveLoginMode(mode);
+                  setErrorText("");
+                  setSuccessText("");
+                }}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex-1 py-3 px-4 rounded-2xl font-semibold text-xs uppercase tracking-wide transition-all duration-300 ${
+                  activeLoginMode === mode
+                    ? mode === 'quick'
+                      ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-200'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-200'
+                    : 'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 border border-gray-200'
+                }`}
+              >
+                {mode === 'signin' && 'Sign In'}
+                {mode === 'signup' && 'Sign Up'}
+                {mode === 'quick' && '⚡ Demo'}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Form container */}
+          <div className="p-6 sm:p-8">
+            <motion.div
+              key={activeLoginMode}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Error Message */}
+              {errorText && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl text-sm text-red-700 font-medium flex items-start gap-3"
+                >
+                  <span className="text-lg mt-0.5">⚠️</span>
+                  <span>{errorText}</span>
+                </motion.div>
+              )}
+
+              {/* Success Message */}
+              {successText && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl text-sm text-emerald-700 font-medium flex items-start gap-3"
+                >
+                  <span className="text-lg">✓</span>
+                  <span>{successText}</span>
+                </motion.div>
+              )}
+
+              {/* Sign In Form */}
+              {activeLoginMode === "signin" && (
+                <form onSubmit={handleSignIn} className="space-y-5">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100"
+                  >
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      <strong className="text-blue-700">🔐 Secure Access:</strong> Enter your credentials to authenticate securely through Firebase.
+                    </p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                  >
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={signinEmail}
+                      onChange={(e) => setSigninEmail(e.target.value)}
+                      className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 bg-white/80 backdrop-blur transition-all duration-300 placeholder-gray-400"
+                      required
+                      disabled={isLoading}
+                    />
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={signinPassword}
+                      onChange={(e) => setSigninPassword(e.target.value)}
+                      className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 bg-white/80 backdrop-blur transition-all duration-300 placeholder-gray-400"
+                      required
+                      disabled={isLoading}
+                    />
+                  </motion.div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.3)" }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-blue-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                        AUTHENTICATING...
+                      </motion.span>
+                    ) : (
+                      "SIGN IN SECURELY"
+                    )}
+                  </motion.button>
+                </form>
+              )}
+
+              {/* Sign Up Form */}
+              {activeLoginMode === "signup" && (
+                <form onSubmit={handleSignUp} className="space-y-5">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100"
+                  >
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      <strong className="text-purple-700">📝 Create Account:</strong> Join the digital transparency initiative. Your data is securely stored.
+                    </p>
+                  </motion.div>
+
+                  {[
+                    { label: "Full Name", value: fullName, onChange: setFullName, placeholder: "Suresh Kumar" },
+                    { label: "Email Address", value: signupEmail, onChange: setSignupEmail, placeholder: "you@example.com", type: "email" },
+                    { label: "Password", value: signupPassword, onChange: setSignupPassword, placeholder: "Min 6 characters", type: "password" }
+                  ].map((field, idx) => (
+                    <motion.div
+                      key={field.label}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 + idx * 0.05 }}
+                    >
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        {field.label}
+                      </label>
+                      <input
+                        type={field.type || "text"}
+                        placeholder={field.placeholder}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 bg-white/80 backdrop-blur transition-all duration-300 placeholder-gray-400"
+                        required
+                        disabled={isLoading}
+                      />
+                    </motion.div>
+                  ))}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        State of Residence
+                      </label>
+                      <select
+                        value={stateOfResidence}
+                        onChange={(e) => setStateOfResidence(e.target.value)}
+                        className="w-full px-4 py-3 text-sm bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 cursor-pointer transition-all duration-300"
+                        disabled={isLoading}
+                      >
+                        {statesOfIndia.map((st) => (
+                          <option key={st} value={st}>
+                            {st}
+                          </option>
+                        ))}
+                      </select>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 }}
+                    >
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                        Aadhaar (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={12}
+                        placeholder="12-digit number"
+                        value={aadhaarNum}
+                        onChange={(e) => setAadhaarNum(e.target.value.replace(/\D/g, ""))}
+                        className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-100 bg-white/80 backdrop-blur transition-all duration-300 placeholder-gray-400"
+                        disabled={isLoading}
+                      />
+                    </motion.div>
+                  </div>
+
+                  <motion.button
+                    type="submit"
+                    disabled={isLoading}
+                    whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(168, 85, 247, 0.3)" }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-purple-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                        CREATING PROFILE...
+                      </motion.span>
+                    ) : (
+                      "CREATE ACCOUNT"
+                    )}
+                  </motion.button>
+                </form>
+              )}
+
+              {/* Quick Demo Mode */}
+              {activeLoginMode === "quick" && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-5 text-center"
+                >
+                  <motion.div
+                    className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border border-emerald-200"
+                    animate={{ y: [0, 4, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  >
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      <strong className="text-emerald-700">⚡ Demo Mode:</strong> Instantly register a test account via Firebase to explore all features without entering credentials.
+                    </p>
+                  </motion.div>
+
+                  <motion.button
+                    type="button"
+                    onClick={handleQuickBypass}
+                    disabled={isLoading}
+                    whileHover={{ y: -4, scale: 1.02, boxShadow: "0 25px 30px -5px rgba(16, 185, 129, 0.4)" }}
+                    whileTap={{ scale: 0.96 }}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 hover:from-emerald-500 hover:via-green-600 hover:to-emerald-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-emerald-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? (
+                      <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                        🚀 REGISTERING...
+                      </motion.span>
+                    ) : (
+                      "⚡ INSTANT DEMO ACCESS"
+                    )}
+                  </motion.button>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xs text-gray-500 space-y-1"
+                  >
+                    <p>No credentials needed. Auto-generates test account.</p>
+                    <p className="text-emerald-600 font-medium">Perfect for exploring features!</p>
+                  </motion.div>
+                </motion.div>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="p-4 bg-gradient-to-t from-gray-50 to-white border-t border-gray-100 text-center"
+          >
+            <p className="text-xs text-gray-500 leading-relaxed">
+              🔒 Secure connection via Firebase Auth. Your data is encrypted end-to-end.
+            </p>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   );
 };
