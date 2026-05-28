@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { CitizenUser } from "../types";
 
 interface HeaderProps {
@@ -26,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   highContrast,
   setHighContrast,
 }) => {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const tabs = [
     { id: "home", label: "Home / Simplify Engine" },
     { id: "logs", label: "Security Audit Logs" },
@@ -39,7 +40,7 @@ export const Header: React.FC<HeaderProps> = ({
   const handleResetZoom = () => setFontSizeMultiplier(1.0);
 
   return (
-    <header className="w-full flex flex-col block" style={{ contentVisibility: "auto" }}>
+    <header className="w-full flex flex-col block sticky top-0 z-40 bg-white/80 backdrop-blur-sm shadow-sm" style={{ contentVisibility: "auto" }}>
       {/* 1. Indian National Flag Tricolor Bar */}
       <div className="w-full h-1.5 flex">
         <div className="flex-1 bg-[#FF9933]"></div>
@@ -179,8 +180,23 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* 4. Navigation Tab Menu Bar (Government style flat strip, navy text, white background or solid color) */}
-      <nav className={`w-full ${highContrast ? "bg-zinc-900" : "bg-[#f8f9fa]"} border-b border-slate-300 flex overflow-x-auto`}>
-        <div className="w-full max-w-7xl mx-auto flex">
+      <nav className={`w-full ${highContrast ? "bg-zinc-900" : "bg-[#f8f9fa]"} border-b border-slate-300`}>
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between py-3 md:py-0">
+            <div className="flex items-center gap-2 md:gap-3">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-slate-500 hidden md:inline">Navigation</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-[10px] font-semibold text-slate-700 md:hidden"
+            >
+              Menu
+              <span>{mobileNavOpen ? "▲" : "▼"}</span>
+            </button>
+          </div>
+          <div className={`${mobileNavOpen ? "flex" : "hidden"} md:flex flex-col md:flex-row`}> 
+            <div className="flex flex-col md:flex-row w-full">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -201,6 +217,8 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             );
           })}
+            </div>
+          </div>
         </div>
       </nav>
     </header>

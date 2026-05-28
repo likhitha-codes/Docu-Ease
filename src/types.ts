@@ -1,4 +1,5 @@
 export interface CitizenUser {
+  uid?: string;
   email: string;
   fullName: string;
   aadhaarId?: string;

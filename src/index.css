@@ -11,7 +11,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+  background: #eef2f7;
   color: #212529;
   font-family: var(--font-sans);
   overflow-x: hidden;

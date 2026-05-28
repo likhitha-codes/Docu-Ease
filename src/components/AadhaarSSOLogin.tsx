@@ -4,14 +4,22 @@ import { auth, db } from "../firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { motion } from "motion/react";
+
+interface ToastPayload {
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+}
 
 interface AadhaarSSOLoginProps {
   onLoginSuccess: (user: CitizenUser) => void;
   highContrast: boolean;
   initialMode?: "signin" | "signup" | "quick";
+  onShowToast?: (toast: ToastPayload) => void;
 }
 
 export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
@@ -31,6 +39,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
   // Sign In Screen State
   const [signinEmail, setSigninEmail] = useState("");
   const [signinPassword, setSigninPassword] = useState("");
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
 
   // Loading and Error message states
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +86,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
       const user = userCredential.user;
 
       const profileData: CitizenUser = {
+        uid: user.uid,
         email: signupEmail.trim(),
         fullName: fullName.trim(),
         aadhaarId: aadhaarNum ? `${aadhaarNum.substring(0, 4)}-XXXX-XXXX` : "Not Provided",
@@ -84,13 +94,20 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
         stateOfResidence: stateOfResidence,
       };
 
-      // Save user profile metadata mock to Firestore
+      // Ensure current auth token is fresh before writing the profile document.
+      if (auth.currentUser?.uid === user.uid) {
+        await auth.currentUser.getIdToken(true);
+      }
+
       await setDoc(doc(db, "users", user.uid), {
         ...profileData,
         createdAt: new Date().toISOString()
       });
 
       setSuccessText("✓ Portal Registration Successful! Access granted.");
+      if (onShowToast) {
+        onShowToast({ type: "success", title: "Registration Successful", message: "Your profile has been created and secured." });
+      }
       setTimeout(() => {
         onLoginSuccess(profileData);
       }, 1000);
@@ -134,12 +151,15 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
         profileData = userSnap.data() as CitizenUser;
       } else {
         profileData = {
+          uid: user.uid,
           email: user.email || signinEmail,
           fullName: user.email?.split("@")[0].toUpperCase() || "Citizen User",
           role: "Citizen",
           stateOfResidence: "Delhi (NCT)"
         };
-        // Setup missing profile row
+        if (auth.currentUser?.uid === user.uid) {
+          await auth.currentUser.getIdToken(true);
+        }
         await setDoc(userDocRef, {
           ...profileData,
           createdAt: new Date().toISOString()
@@ -147,12 +167,46 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
       }
 
       setSuccessText("✓ Secure Access Session authenticated!");
+      if (onShowToast) {
+        onShowToast({ type: "success", title: "Signed In", message: "Welcome back. Your session is now active." });
+      }
       setTimeout(() => {
         onLoginSuccess(profileData);
       }, 1000);
     } catch (err: any) {
       console.error(err);
       setErrorText(`⚠ Sign In Failed: ${err.message}. Ensure Email & Password are correct.`);
+      if (onShowToast) {
+        onShowToast({ type: "error", title: "Sign In Error", message: err.message || "Unable to sign in." });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setErrorText("");
+    setSuccessText("");
+
+    if (!signinEmail.trim() || !signinEmail.includes("@")) {
+      setErrorText("⚠ Please enter the email address registered with your account.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, signinEmail.trim());
+      setSuccessText("✓ Reset instructions have been sent to your email address. Please check your inbox.");
+      if (onShowToast) {
+        onShowToast({ type: "info", title: "Password Reset Sent", message: "Check your inbox for reset instructions." });
+      }
+      setForgotPasswordMode(false);
+    } catch (err: any) {
+      console.error("Password reset failed:", err);
+      setErrorText(`⚠ Password reset failed: ${err.message}`);
+      if (onShowToast) {
+        onShowToast({ type: "error", title: "Reset Failed", message: err.message || "Unable to send reset email." });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -177,6 +231,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
       const user = userCredential.user;
 
       const profileData: CitizenUser = {
+        uid: user.uid,
         email: demoEmail,
         fullName: `Citizen Suresh Kumar (${randomId})`,
         aadhaarId: "5500-XXXX-XXXX",
@@ -184,12 +239,18 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
         stateOfResidence: "Telangana"
       };
 
+      if (auth.currentUser?.uid === user.uid) {
+        await auth.currentUser.getIdToken(true);
+      }
       await setDoc(doc(db, "users", user.uid), {
         ...profileData,
         createdAt: new Date().toISOString()
       });
 
       setSuccessText("✓ Real-time Demo Profile registered successfully via Firebase!");
+      if (onShowToast) {
+        onShowToast({ type: "info", title: "Demo Access", message: "A temporary test account has been created for evaluation." });
+      }
       setTimeout(() => {
         onLoginSuccess(profileData);
       }, 1200);
@@ -204,6 +265,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
         const userSnap = await getDoc(doc(db, "users", user.uid));
         
         let profileData: CitizenUser = {
+          uid: user.uid,
           email: fallBackEmail,
           fullName: "Citizen Suresh Kumar (Demo)",
           aadhaarId: "5500-XXXX-XXXX",
@@ -213,6 +275,9 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
         if (userSnap.exists()) {
           profileData = userSnap.data() as CitizenUser;
         } else {
+          if (auth.currentUser?.uid === user.uid) {
+            await auth.currentUser.getIdToken(true);
+          }
           await setDoc(doc(db, "users", user.uid), {
             ...profileData,
             createdAt: new Date().toISOString()
@@ -231,67 +296,30 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <motion.div
-          className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full blur-3xl opacity-20"
-          animate={{ y: [0, 30, 0], x: [0, 20, 0] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute top-1/2 -left-40 w-80 h-80 bg-purple-200 rounded-full blur-3xl opacity-20"
-          animate={{ y: [0, -30, 0], x: [0, -20, 0] }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute -bottom-32 right-1/3 w-80 h-80 bg-pink-200 rounded-full blur-3xl opacity-20"
-          animate={{ y: [0, 20, 0], x: [0, -30, 0] }}
-          transition={{ duration: 9, repeat: Infinity }}
-        />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md"
-      >
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20">
-          {/* Modern gradient header */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 text-center">
-            <motion.div
-              className="absolute inset-0 opacity-30"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-10" />
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full blur-3xl opacity-10" />
-            </motion.div>
-
-            <motion.div
-              className="relative z-10"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex justify-center items-center gap-1.5 mb-3">
-                <motion.span
-                  className="text-2xl"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                >
-                  🛡️
-                </motion.span>
-                <h1 className="text-white text-2xl font-bold">MeriPehchaan</h1>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className="w-full max-w-lg mx-auto p-4"
+    >
+      <div className="bg-white border border-slate-200 rounded-3xl shadow-xl overflow-hidden">
+          <div className="p-6 bg-[#003366] text-white">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.35em] text-slate-300 mb-2">Government Citizen Portal</p>
+                <h1 className="text-2xl font-semibold tracking-tight">MeriPehchaan Secure Login</h1>
+                <p className="mt-2 text-sm text-slate-200 leading-relaxed">
+                  Trusted single sign-on access for citizen services, document simplification, and verified audit tracking.
+                </p>
               </div>
-              <p className="text-blue-100 text-sm font-medium">National Single Sign-On Platform</p>
-              <p className="text-blue-50 text-xs mt-1 opacity-90">Secure Citizen Portal Gateway</p>
-            </motion.div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 border border-white/15">
+                <span className="text-2xl">🛡️</span>
+              </div>
+            </div>
           </div>
 
           {/* Modern Tabs with claymorphism */}
-          <div className="flex gap-2 p-4 bg-gradient-to-b from-gray-50 to-white">
+          <div className="flex gap-2 p-4 bg-slate-50">
             {(['signin', 'signup', 'quick'] as const).map((mode, idx) => (
               <motion.button
                 key={mode}
@@ -302,13 +330,13 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                 }}
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex-1 py-3 px-4 rounded-2xl font-semibold text-xs uppercase tracking-wide transition-all duration-300 ${
-                  activeLoginMode === mode
-                    ? mode === 'quick'
-                      ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-white shadow-lg shadow-emerald-200'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-200'
-                    : 'bg-white text-gray-600 hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 border border-gray-200'
-                }`}
+                 className={`flex-1 py-3 px-4 rounded-2xl font-semibold text-xs uppercase tracking-wide transition-all duration-300 ${
+                   activeLoginMode === mode
+                     ? mode === 'quick'
+                       ? 'bg-[#0e5f44] text-white shadow-lg shadow-slate-300'
+                       : 'bg-[#003366] text-white shadow-lg shadow-slate-300'
+                     : 'bg-white text-gray-600 hover:bg-slate-100 border border-gray-200'
+                 }`}
               >
                 {mode === 'signin' && 'Sign In'}
                 {mode === 'signup' && 'Sign Up'}
@@ -357,7 +385,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100"
+                    className="p-4 bg-slate-50 rounded-2xl border border-slate-200"
                   >
                     <p className="text-xs text-gray-600 leading-relaxed">
                       <strong className="text-blue-700">🔐 Secure Access:</strong> Enter your credentials to authenticate securely through Firebase.
@@ -407,7 +435,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                     disabled={isLoading}
                     whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.3)" }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-blue-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-[#003366] hover:bg-[#00234d] text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-slate-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
@@ -417,6 +445,37 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                       "SIGN IN SECURELY"
                     )}
                   </motion.button>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-[11px] text-slate-600 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPasswordMode(true);
+                        setErrorText("");
+                        setSuccessText("");
+                      }}
+                      className="text-[#003366] underline underline-offset-2 hover:text-[#001f4d] font-semibold"
+                    >
+                      Forgot your password?
+                    </button>
+                    <p className="max-w-sm">
+                      Enter your registered email and click the reset link. You will receive secure instructions from Firebase.
+                    </p>
+                  </div>
+
+                  {forgotPasswordMode && (
+                    <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 text-[12px]">
+                      <p className="font-semibold mb-2">Password reset instructions will be sent to the email above.</p>
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        disabled={isLoading}
+                        className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-[11px] font-bold text-white hover:bg-[#001f4d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Send Reset Email
+                      </button>
+                    </div>
+                  )}
                 </form>
               )}
 
@@ -427,7 +486,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100"
+                    className="p-4 bg-slate-50 rounded-2xl border border-slate-200"
                   >
                     <p className="text-xs text-gray-600 leading-relaxed">
                       <strong className="text-purple-700">📝 Create Account:</strong> Join the digital transparency initiative. Your data is securely stored.
@@ -508,7 +567,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                     disabled={isLoading}
                     whileHover={{ y: -2, boxShadow: "0 20px 25px -5px rgba(168, 85, 247, 0.3)" }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-purple-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 bg-[#004e8c] hover:bg-[#00376b] text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-slate-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
@@ -530,7 +589,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                   className="space-y-5 text-center"
                 >
                   <motion.div
-                    className="p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border border-emerald-200"
+                    className="p-4 bg-slate-50 rounded-2xl border border-slate-200"
                     animate={{ y: [0, 4, 0] }}
                     transition={{ duration: 3, repeat: Infinity }}
                   >
@@ -545,7 +604,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
                     disabled={isLoading}
                     whileHover={{ y: -4, scale: 1.02, boxShadow: "0 25px 30px -5px rgba(16, 185, 129, 0.4)" }}
                     whileTap={{ scale: 0.96 }}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 hover:from-emerald-500 hover:via-green-600 hover:to-emerald-700 text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-emerald-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-4 bg-[#0e5f44] hover:bg-[#0b4a36] text-white font-bold uppercase tracking-widest text-sm rounded-2xl shadow-lg shadow-slate-300 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
@@ -575,7 +634,7 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="p-4 bg-gradient-to-t from-gray-50 to-white border-t border-gray-100 text-center"
+            className="p-4 bg-slate-50 border-t border-slate-100 text-center"
           >
             <p className="text-xs text-gray-500 leading-relaxed">
               🔒 Secure connection via Firebase Auth. Your data is encrypted end-to-end.
@@ -583,6 +642,6 @@ export const AadhaarSSOLogin: React.FC<AadhaarSSOLoginProps> = ({
           </motion.div>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };

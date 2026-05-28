@@ -12,6 +12,12 @@ import { motion } from "motion/react";
 import { auth, db } from "./firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, addDoc, query, where, getDocs, getDoc, doc, deleteDoc } from "firebase/firestore";
+interface ToastMessage {
+  id: string;
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+}
 
 export default function App() {
   // Authentication session state
@@ -101,6 +107,8 @@ export default function App() {
     visible: false,
     defaultMode: "signin",
   });
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  
 
   // Standard official document presets for rapid evaluation
   const presets = [
@@ -238,6 +246,13 @@ export default function App() {
       }
     };
   }, []);
+  const showToast = (toast: Omit<ToastMessage, "id">) => {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    setToasts((prev) => [{ id, ...toast }, ...prev]);
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((item) => item.id !== id));
+    }, 5200);
+  };
 
   const handleLogin = (newUser: CitizenUser) => {
     setUser(newUser);
@@ -251,6 +266,7 @@ export default function App() {
     handleStopSpeech();
     try {
       await signOut(auth);
+      showToast({ type: "info", title: "Signed Out", message: "You have safely signed out of the portal." });
     } catch (err) {
       console.error("Firebase Signout failed:", err);
     }
@@ -897,6 +913,40 @@ ${generateShareLink()}
         highContrast={highContrast}
         setHighContrast={setHighContrast}
       />
+      <div className="fixed right-4 top-24 z-50 flex flex-col gap-3 max-w-[320px]">
+        {toasts.map((toast) => (
+          <motion.div
+            key={toast.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className={`rounded-2xl border px-4 py-3 shadow-xl backdrop-blur-sm bg-white/95 text-xs font-medium leading-snug transition-all duration-200 ${
+              toast.type === "success"
+                ? "border-emerald-200"
+                : toast.type === "error"
+                ? "border-rose-200"
+                : toast.type === "warning"
+                ? "border-amber-200"
+                : "border-slate-200"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  {toast.title}
+                </p>
+                <p className="text-[12px] text-slate-700">{toast.message}</p>
+              </div>
+              <button
+                onClick={() => setToasts((prev) => prev.filter((item) => item.id !== toast.id))}
+                className="text-slate-400 hover:text-slate-500 text-[11px]"
+              >
+                Close
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Main Container */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 md:px-6 py-8">
@@ -1865,6 +1915,60 @@ ${generateShareLink()}
           </div>
         </div>
 
+                {user && (
+                  <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-semibold mb-2">Citizen Dashboard Overview</p>
+                          <h3 className="text-lg font-bold text-[#003366]">Welcome back, {user.fullName.split(" ")[0]}.</h3>
+                          <p className="text-xs text-slate-600 mt-2">Your portal metrics and recent document audit history are displayed for quick review.</p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase text-slate-700">
+                          {user.role} • {user.stateOfResidence}
+                        </div>
+                      </div>
+                      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 mb-2">Completed Documents</p>
+                          <p className="text-3xl font-bold text-[#003366]">{recentHistory.length}</p>
+                        </div>
+                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 mb-2">Languages Delivered</p>
+                          <p className="text-3xl font-bold text-[#003366]">{(includeEnglish ? 1 : 0) + (includeTelugu ? 1 : 0) + (includeHindi ? 1 : 0)}</p>
+                        </div>
+                        <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 mb-2">Active Session</p>
+                          <p className="text-3xl font-bold text-[#003366]">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-3">Quick Access</p>
+                        <div className="grid gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setInputTab("paste")}
+                            className="w-full text-left rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[11px] font-semibold text-slate-800 hover:border-[#003366] hover:bg-[#f1f5f9]"
+                          >Upload or paste a new government document</button>
+                          <button
+                            type="button"
+                            onClick={() => setAuthModal({ visible: true, defaultMode: "quick" })}
+                            className="w-full text-left rounded-2xl border border-slate-200 bg-[#003366] px-4 py-3 text-[11px] font-semibold text-white hover:bg-[#00234d]"
+                          >Open demo bypass workflow</button>
+                        </div>
+                      </div>
+                      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-3">Latest Activity</p>
+                        <p className="text-sm font-semibold text-slate-700">Most recent simplified document:</p>
+                        <p className="mt-2 text-xs text-slate-600 leading-relaxed">{recentHistory[0]?.fileName || "No documents processed yet."}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
         <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6 mt-6 border-t border-slate-700/50 flex flex-col md:flex-row justify-between items-center gap-3 text-[10px] text-slate-400 select-none">
           <p className="font-semibold text-slate-300">
             © 2024 DocuEase | National Informatics Centre (NIC) Style Footer
@@ -2094,6 +2198,7 @@ ${generateShareLink()}
                   setAuthModal({ visible: false, defaultMode: "signin" });
                 }}
                 highContrast={highContrast}
+                onShowToast={showToast}
                 initialMode={authModal.defaultMode}
               />
             </div>
