@@ -48,6 +48,185 @@
       "displayName": "Mee",
       "phoneNumber": "",
       "registered": true
+    },
+    "me@gmail.com": {
+      "trustScore": 5,
+      "history": [
+        {
+          "id": "doc_ws70hdzpo",
+          "originalText": "[Document Upload: NLP Tools Flowchart.png]",
+          "timestamp": "2026-06-17T14:24:43.294Z",
+          "isDocument": true,
+          "isGovernmentRelated": true,
+          "documentType": "Judiciary Brief",
+          "title": "Government Document Translation Process",
+          "summary": "The document outlines a flowchart for translating government documents from complex English to simple English, Telugu, and Hindi.",
+          "simplifiedEnglish": "The government document translation process involves several steps, including text pre-processing, complexity detection, text simplification, machine translation, and quality check.",
+          "teluguTranslation": "ప్రభుత్వ పత్రాల అనువాద ప్రక్రియ అనేక దశలను కలిగి ఉంటుంది, వీటిలో టెక్స్ట్ ప్రీ-ప్రాసెసింగ్, సంక్లిష్టత గుర్తింపు, టెక్స్ట్ సరళీకృతం, మెషీన్ అనువాదం మరియు నాణ్యత తనిఖీ ఉన్నాయి.",
+          "hindiTranslation": "सरकारी दस्तावेज अनुवाद प्रक्रिया में कई चरण शामिल हैं, जिनमें टेक्स्ट प्री-प्रोसेसिंग, जटिलता का पता लगाना, टेक्स्ट सरलीकरण, मशीन अनुवाद और गुणवत्ता जांच शामिल हैं।",
+          "glossary": [
+            {
+              "term": "Tokenization",
+              "definition": "A process of breaking down text into individual words or tokens"
+            },
+            {
+              "term": "Machine Translation",
+              "definition": "The use of software to translate text from one language to another"
+            },
+            {
+              "term": "Quality Check",
+              "definition": "A process of reviewing and verifying the accuracy of translated text"
+            },
+            {
+              "term": "Complexity Detection",
+              "definition": "A process of identifying difficult words and long sentences in a text"
+            },
+            {
+              "term": "Text Simplification",
+              "definition": "The process of rewriting complex text into simpler language"
+            },
+            {
+              "term": "Sentence Segmentation",
+              "definition": "The process of dividing text into individual sentences"
+            }
+          ],
+          "trustScoreImpact": 5
+        },
+        {
+          "id": "doc_l4lytvvrx",
+          "originalText": "[Document Upload: flowchart.jpg]",
+          "timestamp": "2026-06-17T14:19:27.556Z",
+          "isDocument": true,
+          "isGovernmentRelated": true,
+          "documentType": "General Policy Brief",
+          "title": "Government Document Simplification and Translation Process",
+          "summary": "This document outlines the process of simplifying complex government documents and translating them into Telugu and Hindi.",
+          "simplifiedEnglish": "The government document simplification process involves inputting a complex government document, pre-processing the text, detecting complexity, simplifying the text, and translating it into Telugu and Hindi.",
+          "teluguTranslation": "ప్రభుత్వ పత్రాల సరళీకరణ ప్రక్రియ సంక్లిష్ట ప్రభుత్వ పత్రాన్ని ఇన్‌పుట్ చేయడం, వచనాన్ని పూర్వప్రాప్తి చేయడం, సంక్లిష్టతను గుర్తించడం, వచనాన్ని సరళీకరించడం మరియు తెలుగు మరియు హిందీలోకి అనువదించడం.",
+          "hindiTranslation": "सरकारी दस्तावेज़ सरलीकरण प्रक्रिया जटिल सरकारी दस्तावेज़ को इनपुट करने, पाठ को पूर्व-प्रसंस्करण करने, जटिलता का पता लगाने, पाठ को सरल बनाने और तेलुगु और हिंदी में अनुवाद करने के बारे में है।",
+          "glossary": [
+            {
+              "term": "Tokenization",
+              "definition": "Text into individual words or tokens"
+            },
+            {
+              "term": "Sentence Segmentation",
+              "definition": "Breaking down text into individual sentences"
+            },
+            {
+              "term": "Complexity Detection",
+              "definition": "Identifying difficult words and long sentences in a text"
+            },
+            {
+              "term": "Text Simplification",
+              "definition": "Converting complex text into simple language"
+            },
+            {
+              "term": "Machine Translation",
+              "definition": "Using computers to translate text from one language to another"
+            },
+            {
+              "term": "Quality Check",
+              "definition": "Verifying the accuracy and quality of translated text"
+            }
+          ],
+          "trustScoreImpact": 5
+        }
+      ],
+      "saved": [],
+      "displayName": "Me",
+      "phoneNumber": "",
+      "registered": true
+    },
+    "latha@gmail.com": {
+      "trustScore": 100,
+      "history": [
+        {
+          "id": "doc_vtjuo3qrh",
+          "originalText": "Key Features of a Government AdvisoryObjective: Informs citizens or organizations about potential risks (e.g., cyber scams, extreme weather, public health risks).Actionable Steps: Includes clear \"Do’s and Don'ts\" or procedural instructions.Target Audience: Directed at specific groups (e.g., digital intermediaries, international travelers, or vulnerable communities).Common Examples & TemplatesWhile the exact format changes depending\n",
+          "timestamp": "2026-06-17T14:29:41.258Z",
+          "isDocument": true,
+          "isGovernmentRelated": true,
+          "documentType": "Advisory",
+          "title": "Government Advisory Guidelines",
+          "summary": "The government advisory provides citizens with information on potential risks and actionable steps to mitigate them.",
+          "simplifiedEnglish": "The government advisory informs people about possible dangers, such as cyber scams, bad weather, and health risks, and gives clear instructions on what to do and what not to do.",
+          "teluguTranslation": "ప్రభుత్వ సలహా పౌరులకు సంభావ్య ప్రమాదాలు, వాటిని తగ్గించడానికి చర్యలు తీసుకోవడం గురించి సమాచారం అందిస్తుంది.",
+          "hindiTranslation": "सरकारी सलाहकार नागरिकों को संभावित जोखिमों और उन्हें कम करने के लिए कार्रवाई करने के बारे में जानकारी प्रदान करता है।",
+          "glossary": [
+            {
+              "term": "Cyber Scams",
+              "definition": "Scams that use the internet to trick people into giving away their personal information or money."
+            },
+            {
+              "term": "Public Health Risks",
+              "definition": "Dangers to people's health that can affect a large number of people, such as diseases or environmental hazards."
+            },
+            {
+              "term": "Actionable Steps",
+              "definition": "Clear instructions on what to do or not to do in order to achieve a specific goal or prevent a problem."
+            },
+            {
+              "term": "Vulnerable Communities",
+              "definition": "Groups of people who are more likely to be affected by a problem or disaster due to their social, economic, or environmental circumstances."
+            },
+            {
+              "term": "Digital Intermediaries",
+              "definition": "People or organizations that help others access or use digital technologies, such as websites or social media platforms."
+            },
+            {
+              "term": "Extreme Weather",
+              "definition": "Unusual or severe weather conditions, such as floods, droughts, or heatwaves, that can cause harm to people or property."
+            }
+          ],
+          "trustScoreImpact": 5
+        }
+      ],
+      "saved": [
+        {
+          "id": "doc_vtjuo3qrh",
+          "originalText": "Key Features of a Government AdvisoryObjective: Informs citizens or organizations about potential risks (e.g., cyber scams, extreme weather, public health risks).Actionable Steps: Includes clear \"Do’s and Don'ts\" or procedural instructions.Target Audience: Directed at specific groups (e.g., digital intermediaries, international travelers, or vulnerable communities).Common Examples & TemplatesWhile the exact format changes depending\n",
+          "timestamp": "2026-06-17T14:29:41.258Z",
+          "isDocument": true,
+          "isGovernmentRelated": true,
+          "documentType": "Advisory",
+          "title": "Government Advisory Guidelines",
+          "summary": "The government advisory provides citizens with information on potential risks and actionable steps to mitigate them.",
+          "simplifiedEnglish": "The government advisory informs people about possible dangers, such as cyber scams, bad weather, and health risks, and gives clear instructions on what to do and what not to do.",
+          "teluguTranslation": "ప్రభుత్వ సలహా పౌరులకు సంభావ్య ప్రమాదాలు, వాటిని తగ్గించడానికి చర్యలు తీసుకోవడం గురించి సమాచారం అందిస్తుంది.",
+          "hindiTranslation": "सरकारी सलाहकार नागरिकों को संभावित जोखिमों और उन्हें कम करने के लिए कार्रवाई करने के बारे में जानकारी प्रदान करता है।",
+          "glossary": [
+            {
+              "term": "Cyber Scams",
+              "definition": "Scams that use the internet to trick people into giving away their personal information or money."
+            },
+            {
+              "term": "Public Health Risks",
+              "definition": "Dangers to people's health that can affect a large number of people, such as diseases or environmental hazards."
+            },
+            {
+              "term": "Actionable Steps",
+              "definition": "Clear instructions on what to do or not to do in order to achieve a specific goal or prevent a problem."
+            },
+            {
+              "term": "Vulnerable Communities",
+              "definition": "Groups of people who are more likely to be affected by a problem or disaster due to their social, economic, or environmental circumstances."
+            },
+            {
+              "term": "Digital Intermediaries",
+              "definition": "People or organizations that help others access or use digital technologies, such as websites or social media platforms."
+            },
+            {
+              "term": "Extreme Weather",
+              "definition": "Unusual or severe weather conditions, such as floods, droughts, or heatwaves, that can cause harm to people or property."
+            }
+          ],
+          "trustScoreImpact": 5
+        }
+      ],
+      "displayName": "Latha",
+      "phoneNumber": "",
+      "registered": true
     }
   },
   "trustScore": 100,

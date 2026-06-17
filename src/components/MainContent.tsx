@@ -12,6 +12,7 @@ interface MainContentProps {
   loading: boolean;
   setLoading: (v: boolean) => void;
   onProcess: (result: HistoryItem, score: number) => void;
+  onTrustScoreSync: (score: number) => void;
   onSave: (id: string, state: boolean) => void;
   onDelete: (id: string) => void;
   onShowAuth: () => void;
@@ -29,7 +30,7 @@ const LANG_OPTIONS: { value: Lang; label: string }[] = [
 
 export default function MainContent({
   user, activeView, currentResult, history, saved,
-  loading, setLoading, onProcess, onSave, onDelete,
+  loading, setLoading, onProcess, onTrustScoreSync, onSave, onDelete,
   onShowAuth, onNavigate
 }: MainContentProps) {
   const [inputMode, setInputMode] = useState<InputMode>("text");
@@ -38,13 +39,21 @@ export default function MainContent({
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isLocked = !!user && user.trustScore <= 5;
 
   async function handleSubmit() {
     if (!user) { onShowAuth(); return; }
+    if (isLocked) {
+      setError("Your trust score is too low. The translation feature is locked on your account.");
+      return;
+    }
     if (inputMode === "text" && !textInput.trim()) { setError("Please paste some document text."); return; }
     if (inputMode === "file" && !selectedFile) { setError("Please select a file to upload."); return; }
     setError("");
+    setWarning("");
     setLoading(true);
 
     try {
@@ -73,6 +82,8 @@ export default function MainContent({
         setSelectedFile(null);
       } else {
         setError(data.error || "Processing failed. Please try again.");
+        if (data.warning) setWarning(data.warning);
+        if (typeof data.trustScore === "number") onTrustScoreSync(data.trustScore);
       }
     } catch {
       setError("Network error. Please check your connection.");
@@ -249,6 +260,27 @@ export default function MainContent({
           </div>
         )}
 
+        {warning && (
+          <div className="trust-warning">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            {warning}
+          </div>
+        )}
+
+        {isLocked && (
+          <div className="trust-locked-msg">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}>
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            The translation feature is locked because your trust score is too low. Upload genuine government documents to restore access.
+          </div>
+        )}
+
         {error && (
           <div className="input-error">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -263,14 +295,22 @@ export default function MainContent({
         {/* Submit */}
         <div className="input-actions">
           <button
-            className="btn-process"
+            className={`btn-process ${isLocked ? "locked" : ""}`}
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || isLocked}
           >
             {loading ? (
               <>
                 <span className="spinner-sm" />
                 Processing...
+              </>
+            ) : isLocked ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Locked
               </>
             ) : (
               <>

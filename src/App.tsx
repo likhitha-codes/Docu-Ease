@@ -68,6 +68,16 @@ export default function App() {
     }
   }
 
+  // Updates only the trust score (no navigation) — used when an upload is
+  // rejected (e.g. non-government document) so the sidebar score and lock
+  // state stay in sync without yanking the user to a result view.
+  function handleTrustScoreSync(newScore: number) {
+    if (!user) return;
+    const updatedUser = { ...user, trustScore: newScore };
+    setUser(updatedUser);
+    localStorage.setItem("docuease_user", JSON.stringify(updatedUser));
+  }
+
   async function handleSave(docId: string, saveState: boolean) {
     if (!user) return;
     await fetch("/api/save", {
@@ -157,6 +167,7 @@ export default function App() {
           loading={loading}
           setLoading={setLoading}
           onProcess={handleProcess}
+          onTrustScoreSync={handleTrustScoreSync}
           onSave={handleSave}
           onDelete={handleDelete}
           onShowAuth={() => setShowAuth(true)}

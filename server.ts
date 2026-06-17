@@ -437,6 +437,18 @@ app.post("/api/process", async (req, res) => {
     return res.status(400).json({ error: "Provide either manually pasted text or a base64 encoded document file." });
   }
 
+  // Block locked users (trust score 0-5) before spending any AI quota
+  const preDb = loadDb();
+  const preUserData = getUserData(preDb, email);
+  if ((preUserData.trustScore ?? 100) <= 5) {
+    return res.status(403).json({
+      error: "Your trust score is too low to use this feature.",
+      warning: "Repeated uploads of non-government documents have locked the translation feature on your account.",
+      locked: true,
+      trustScore: preUserData.trustScore
+    });
+  }
+
   try {
     const groq = getGroqClient();
 
@@ -513,22 +525,27 @@ Ensure Telugu and Hindi texts are fully translated and returned in elegant unico
     const documentId = "doc_" + Math.random().toString(36).substring(2, 11);
 
     const userData = getUserData(db, email);
-    const existingScore = userData.trustScore || 100;
+    const existingScore = userData.trustScore ?? 100;
+    const TRUST_MAX = 100;
+    const TRUST_LOCK_THRESHOLD = 5; // score in [0,5] => locked
 
-    // Non-government document — deduct 10, clamped to [0, 100]; lock when score hits 0
-    if (docuDetails.isGovernmentRelated === false || !docuDetails.isGovernmentRelated) {
-      const newScore = Math.max(0, Math.min(100, existingScore - 10));
+    // Non-government document — deduct 10, clamped to [0, 100]; lock when score falls to 0-5
+    if (!docuDetails.isGovernmentRelated) {
+      const newScore = Math.max(0, Math.min(TRUST_MAX, existingScore - 10));
       userData.trustScore = newScore;
       saveDb(db);
+
+      const locked = newScore <= TRUST_LOCK_THRESHOLD;
       return res.status(400).json({
-        error: "Failed to translate because the uploaded document is not government-related",
-        locked: newScore === 0,
+        error: "This document does not appear to be government-related. Trust score reduced.",
+        warning: "Repeated uploads of non-government documents may result in losing access to the translation feature.",
+        locked,
         trustScore: newScore
       });
     }
 
     // Government document — +5, clamped to [0, 100]
-    const newScore = Math.max(0, Math.min(100, existingScore + 5));
+    const newScore = Math.max(0, Math.min(TRUST_MAX, existingScore + 5));
     userData.trustScore = newScore;
 
     const newDocItem = {
@@ -545,10 +562,10 @@ Ensure Telugu and Hindi texts are fully translated and returned in elegant unico
     res.json({
       status: "success",
       trustScore: newScore,
+      locked: false,
       result: newDocItem
     });
-
-  } catch (error: any) {
+    } catch (error: any) {
     console.error("Groq simplifier service failed:", error);
     res.status(500).json({
       error: error.message || "Simplification service errored. Verify database or credentials.",
